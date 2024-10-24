@@ -1,24 +1,36 @@
 import streamlit as st
 import gdown
 import torch
-from transformers import BertTokenizerFast, BertForTokenClassification
+from transformers import BertTokenizerFast, BertForTokenClassification, BertConfig
 
-# URL for your model weights stored on Google Drive
-MODEL_URL = 'https://drive.google.com/drive/folders/1bx4hZnDOxY42RtCLBUH9qrac10d3sQo5?usp=sharing'  # Replace with actual file ID from Googlhttps://drive.google.com/drive/folders/1bx4hZnDOxY42RtCLBUH9qrac10d3sQo5?usp=sharinge Drive
+# Google Drive file IDs for the model weights and config file
+WEIGHTS_URL = 'https://drive.google.com/file/d/1Ak-TYo4lB31tjfRe_dkiLf55VbdvC48m/view?usp=drive_link'
+CONFIG_URL = 'https://drive.google.com/file/d/1S7TZKENa2hMMMoK6oxerCUC6vEijjDBI/view?usp=drive_link'
 
-# Function to download the model weights
+# Function to download files from Google Drive
 @st.cache_resource
-def download_model():
-    output = 'bert_email_subject_model.bin'
-    gdown.download(MODEL_URL, output, quiet=False)
-    return output
+def download_files():
+    weights_output = 'pytorch_model.bin'
+    config_output = 'config.json'
 
-# Download the model weights
-model_path = download_model()
+    # Download the model weights and config file
+    gdown.download(WEIGHTS_URL, weights_output, quiet=False)
+    gdown.download(CONFIG_URL, config_output, quiet=False)
+    
+    return weights_output, config_output
 
-# Load the tokenizer and model
+# Download the model weights and config
+weights_path, config_path = download_files()
+
+# Load the tokenizer
 tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
-model = BertForTokenClassification.from_pretrained(model_path)
+
+# Load the config and model
+config = BertConfig.from_json_file(config_path)
+model = BertForTokenClassification(config)
+
+# Load the weights into the model
+model.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
 model.eval()
 
 # Streamlit app
