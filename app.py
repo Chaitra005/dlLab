@@ -4,7 +4,7 @@ import torch
 from transformers import BertTokenizerFast, BertForTokenClassification
 
 # URL for your model weights stored on Google Drive
-MODEL_URL = 'https://drive.google.com/drive/folders/1bx4hZnDOxY42RtCLBUH9qrac10d3sQo5?usp=sharing '  # Replace with actual file ID from Googlhttps://drive.google.com/drive/folders/1bx4hZnDOxY42RtCLBUH9qrac10d3sQo5?usp=sharinge Drive
+MODEL_URL = 'https://drive.google.com/drive/folders/1vzP0CD3Wyx6x_Av-4uFeVPYMHWI86pqa?usp=sharing'  # Replace with actual file ID from Googlhttps://drive.google.com/drive/folders/1bx4hZnDOxY42RtCLBUH9qrac10d3sQo5?usp=sharinge Drive
 
 # Function to download the model weights
 @st.cache_resource
