@@ -2,15 +2,16 @@ import streamlit as st
 import gdown
 import torch
 from transformers import BertTokenizerFast, BertForTokenClassification, BertConfig
+from safetensors.torch import load_file as safetensors_load_file
 
-# Google Drive file IDs for the model weights and config file
+# Google Drive links for model files
 WEIGHTS_URL = 'https://drive.google.com/file/d/1Ak-TYo4lB31tjfRe_dkiLf55VbdvC48m/view?usp=drive_link'
-CONFIG_URL = 'https://drive.google.com/file/d/1S7TZKENa2hMMMoK6oxerCUC6vEijjDBI/view?usp=drive_link'
+CONFIG_URL = 'https://drive.google.com/file/d/1S7TZKENa2hMMMoK6oxerCUC6vEijjDBI/view?usp=drive_link '
 
 # Function to download files from Google Drive
 @st.cache_resource
 def download_files():
-    weights_output = 'pytorch_model.bin'
+    weights_output = 'model_weights.safetensors'
     config_output = 'config.json'
 
     # Download the model weights and config file
@@ -25,12 +26,13 @@ weights_path, config_path = download_files()
 # Load the tokenizer
 tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
-# Load the config and model
+# Load the config and initialize the model
 config = BertConfig.from_json_file(config_path)
 model = BertForTokenClassification(config)
 
-# Load the weights into the model
-model.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
+# Load the safetensors weights into the model
+model_weights = safetensors_load_file(weights_path)
+model.load_state_dict(model_weights, strict=False)
 model.eval()
 
 # Streamlit app
