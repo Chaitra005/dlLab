@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Subject Line Generator</title>
+</head>
+<body>
+    <h1>Generate Email Subject Line</h1>
+    <form action="/predict" method="post">
+        <label for="email_body">Email Body:</label><br>
+        <textarea name="email_body" id="email_body" rows="10" cols="50"></textarea><br><br>
+        <input type="submit" value="Generate Subject Line">
+    </form>
+
+    <div id="subject_result">
+        {% if subject_line %}
+            <h2>Generated Subject Line:</h2>
+            <p>{{ subject_line }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>
