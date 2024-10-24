@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+import streamlit as st
 import torch
 from transformers import BertTokenizerFast, BertForTokenClassification
 import nltk
@@ -6,10 +6,8 @@ import nltk
 # Download NLTK resources (if not already installed)
 nltk.download('punkt')
 
-app = Flask(__name__)
-
 # Load the pre-trained model and tokenizer
-MODEL_PATH = 'model/bert_email_subject_model'
+MODEL_PATH = 'model/bert_email_subject_model'  # Update this path to your model
 tokenizer = BertTokenizerFast.from_pretrained(MODEL_PATH)
 model = BertForTokenClassification.from_pretrained(MODEL_PATH)
 
@@ -48,23 +46,14 @@ def generate_subject_line(email_body):
     
     return predicted_subject
 
-# Define Flask route for generating the subject line
-@app.route('/')
-def home():
-    return render_template('index.html')
+# Streamlit interface
+st.title("Email Subject Prediction App")
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if request.method == 'POST':
-        email_body = request.form['email_body']
-        
-        if not email_body:
-            return jsonify({"error": "No email body provided!"})
-        
-        # Generate the subject line
+email_body = st.text_area("Enter the email body text")
+
+if st.button("Predict Subject"):
+    if email_body.strip():
         subject_line = generate_subject_line(email_body)
-        return jsonify({"subject_line": subject_line})
-
-# Run the Flask app
-if __name__ == '__main__':
-    app.run(debug=True)
+        st.write(f"Predicted Subject: {subject_line}")
+    else:
+        st.write("Please enter valid email body text.")
