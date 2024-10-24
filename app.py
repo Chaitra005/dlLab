@@ -1,59 +1,46 @@
 import streamlit as st
+import gdown
 import torch
 from transformers import BertTokenizerFast, BertForTokenClassification
-import nltk
 
-# Download NLTK resources (if not already installed)
-nltk.download('punkt')
+# URL for your model weights stored on Google Drive
+MODEL_URL = ''  # Replace with actual file ID from Googlhttps://drive.google.com/drive/folders/1bx4hZnDOxY42RtCLBUH9qrac10d3sQo5?usp=sharinge Drive
 
-# Load the pre-trained model and tokenizer
-MODEL_PATH = 'model/bert_email_subject_model'  # Update this path to your model
-tokenizer = BertTokenizerFast.from_pretrained(MODEL_PATH)
-model = BertForTokenClassification.from_pretrained(MODEL_PATH)
+# Function to download the model weights
+@st.cache_resource
+def download_model():
+    output = 'bert_email_subject_model.bin'
+    gdown.download(MODEL_URL, output, quiet=False)
+    return output
 
-# Set device
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = model.to(device)
+# Download the model weights
+model_path = download_model()
 
-# Preprocess the input data
-def preprocess_input(email_body, max_len=100):
-    encoding = tokenizer(
-        email_body,
-        add_special_tokens=True,
-        truncation=True,
-        max_length=max_len,
-        padding='max_length',
-        return_attention_mask=True,
-        return_tensors='pt'
-    )
-    return encoding
+# Load the tokenizer and model
+tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
+model = BertForTokenClassification.from_pretrained(model_path)
+model.eval()
 
-# Perform inference
-def generate_subject_line(email_body):
-    model.eval()
-    encoding = preprocess_input(email_body)
-    
-    input_ids = encoding['input_ids'].to(device)
-    attention_mask = encoding['attention_mask'].to(device)
-
-    with torch.no_grad():
-        outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-        logits = outputs.logits
-        predicted_ids = torch.argmax(logits, dim=-1)
-        
-    predicted_tokens = tokenizer.convert_ids_to_tokens(predicted_ids[0], skip_special_tokens=True)
-    predicted_subject = tokenizer.convert_tokens_to_string(predicted_tokens)
-    
-    return predicted_subject
-
-# Streamlit interface
+# Streamlit app
 st.title("Email Subject Prediction App")
 
-email_body = st.text_area("Enter the email body text")
+email_body = st.text_area("Enter the email body text", "")
 
 if st.button("Predict Subject"):
     if email_body.strip():
-        subject_line = generate_subject_line(email_body)
-        st.write(f"Predicted Subject: {subject_line}")
+        # Tokenize the input
+        inputs = tokenizer(email_body, return_tensors='pt', truncation=True, padding=True, max_length=100)
+
+        # Perform inference
+        with torch.no_grad():
+            outputs = model(**inputs)
+            logits = outputs.logits
+
+        # Convert logits to predicted token IDs
+        predicted_ids = torch.argmax(logits, dim=-1)
+        predicted_tokens = tokenizer.convert_ids_to_tokens(predicted_ids[0], skip_special_tokens=True)
+        predicted_text = tokenizer.convert_tokens_to_string(predicted_tokens)
+
+        st.write(f"Predicted Subject: {predicted_text}")
     else:
         st.write("Please enter valid email body text.")
